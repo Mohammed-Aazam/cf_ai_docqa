@@ -1,0 +1,14 @@
+{
+  "name": "cf-ai-docqa",
+  "main": "src/index.js",
+  "compatibility_date": "2024-01-01",
+  "ai": {
+    "binding": "AI"
+  },
+  "kv_namespaces": [
+    {
+      "binding": "DOC_STORE",
+      "id": "5a72e905225b49e999dfbaa8d6090a38"
+    }
+  ]
+}

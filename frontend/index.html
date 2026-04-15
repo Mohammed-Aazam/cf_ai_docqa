@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CF AI Document Q&A</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e0e0e0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #f6821f;
+      margin-bottom: 6px;
+      font-size: 1.8rem;
+    }
+
+    .subtitle {
+      color: #888;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+    }
+
+    /* Document upload area */
+    .doc-section {
+      background: #1a1d27;
+      border: 1px solid #2a2d3a;
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .doc-section label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #f6821f;
+    }
+
+    textarea#docInput {
+      width: 100%;
+      height: 120px;
+      background: #0f1117;
+      border: 1px solid #2a2d3a;
+      border-radius: 8px;
+      color: #e0e0e0;
+      padding: 10px;
+      font-size: 0.9rem;
+      resize: vertical;
+    }
+
+    .doc-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: opacity 0.2s;
+    }
+
+    button:hover { opacity: 0.85; }
+
+    #uploadBtn {
+      background: #f6821f;
+      color: white;
+      flex: 1;
+    }
+
+    #clearBtn {
+      background: #2a2d3a;
+      color: #e0e0e0;
+    }
+
+    .status {
+      font-size: 0.85rem;
+      margin-top: 8px;
+      min-height: 20px;
+    }
+
+    .status.success { color: #4caf50; }
+    .status.error { color: #f44336; }
+
+    /* Chat area */
+    .chat-section {
+      background: #1a1d27;
+      border: 1px solid #2a2d3a;
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 300px;
+    }
+
+    .chat-section label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #f6821f;
+    }
+
+    #chatBox {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 12px;
+      min-height: 200px;
+      max-height: 350px;
+      padding-right: 4px;
+    }
+
+    .message {
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      max-width: 85%;
+    }
+
+    .message.user {
+      background: #f6821f;
+      color: white;
+      align-self: flex-end;
+    }
+
+    .message.ai {
+      background: #2a2d3a;
+      color: #e0e0e0;
+      align-self: flex-start;
+    }
+
+    .message.thinking {
+      background: #2a2d3a;
+      color: #888;
+      align-self: flex-start;
+      font-style: italic;
+    }
+
+    .chat-input-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    #questionInput {
+      flex: 1;
+      background: #0f1117;
+      border: 1px solid #2a2d3a;
+      border-radius: 8px;
+      color: #e0e0e0;
+      padding: 10px;
+      font-size: 0.9rem;
+    }
+
+    #questionInput:focus {
+      outline: none;
+      border-color: #f6821f;
+    }
+
+    #askBtn {
+      background: #f6821f;
+      color: white;
+    }
+
+    #askBtn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📄 CF AI Document Q&A</h1>
+  <p class="subtitle">Paste any document, then ask questions about it</p>
+
+  <div class="container">
+
+    <!-- Document Upload Section -->
+    <div class="doc-section">
+      <label>📋 Step 1: Paste Your Document</label>
+      <textarea id="docInput" placeholder="Paste any text document here — an article, report, contract, notes, etc..."></textarea>
+      <div class="doc-buttons">
+        <button id="uploadBtn" onclick="uploadDocument()">⬆️ Upload Document</button>
+        <button id="clearBtn" onclick="clearSession()">🗑️ Clear</button>
+      </div>
+      <div class="status" id="uploadStatus"></div>
+    </div>
+
+    <!-- Chat Section -->
+    <div class="chat-section">
+      <label>💬 Step 2: Ask Questions About Your Document</label>
+      <div id="chatBox">
+        <div class="message ai">👋 Hello! Upload a document above and I'll answer any questions you have about it.</div>
+      </div>
+      <div class="chat-input-row">
+        <input
+          type="text"
+          id="questionInput"
+          placeholder="Ask a question about your document..."
+          onkeydown="if(event.key==='Enter') askQuestion()"
+        />
+        <button id="askBtn" onclick="askQuestion()">Ask ➤</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ⚠️ YOUR WORKER URL - already set correctly!
+    const WORKER_URL = "https://cf-ai-docqa.mohammedaazam.workers.dev";
+
+    function setStatus(msg, type) {
+      const el = document.getElementById("uploadStatus");
+      el.textContent = msg;
+      el.className = "status " + type;
+    }
+
+    function addMessage(text, sender) {
+      const chatBox = document.getElementById("chatBox");
+      const div = document.createElement("div");
+      div.className = "message " + sender;
+      div.textContent = text;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      return div;
+    }
+
+    async function uploadDocument() {
+      const doc = document.getElementById("docInput").value.trim();
+      if (!doc) {
+        setStatus("⚠️ Please paste a document first.", "error");
+        return;
+      }
+
+      setStatus("Uploading...", "");
+      try {
+        const res = await fetch(WORKER_URL + "/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ document: doc }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          setStatus("✅ Document uploaded! You can now ask questions.", "success");
+          addMessage("📄 New document uploaded. Ask me anything about it!", "ai");
+        } else {
+          setStatus("❌ Upload failed: " + (data.error || "Unknown error"), "error");
+        }
+      } catch (err) {
+        setStatus("❌ Could not connect to backend.", "error");
+      }
+    }
+
+    async function askQuestion() {
+      const input = document.getElementById("questionInput");
+      const question = input.value.trim();
+      if (!question) return;
+
+      const askBtn = document.getElementById("askBtn");
+      askBtn.disabled = true;
+      input.value = "";
+
+      addMessage(question, "user");
+      const thinking = addMessage("🤔 Thinking...", "thinking");
+
+      try {
+        const res = await fetch(WORKER_URL + "/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question }),
+        });
+        const data = await res.json();
+        thinking.remove();
+
+        if (data.answer) {
+          addMessage(data.answer, "ai");
+        } else {
+          addMessage("❌ Error: " + (data.error || "Unknown error"), "ai");
+        }
+      } catch (err) {
+        thinking.remove();
+        addMessage("❌ Could not connect to backend.", "ai");
+      }
+
+      askBtn.disabled = false;
+      input.focus();
+    }
+
+    async function clearSession() {
+      try {
+        await fetch(WORKER_URL + "/clear", { method: "POST" });
+        document.getElementById("docInput").value = "";
+        document.getElementById("chatBox").innerHTML =
+          '<div class="message ai">👋 Session cleared! Paste a new document to start again.</div>';
+        setStatus("", "");
+      } catch (err) {
+        setStatus("❌ Could not clear session.", "error");
+      }
+    }
+  </script>
+
+</body>
+</html>
